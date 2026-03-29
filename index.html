@@ -814,7 +814,7 @@ function saveFeed(){
   document.getElementById('feed-timer-card').classList.add('hidden');
   document.getElementById('feed-start-btns').classList.remove('hidden');
   timerSide=null; timerSec=0;
-  renderFeedToday(); renderHome(); updateFeedSug();
+  renderFeedToday(); renderHome(); updateFeedSug(); saveData();
 }
 function cancelFeed(){
   clearInterval(timerInterval);
@@ -844,7 +844,7 @@ function saveManualFeed(){
   fLogs.unshift(log); fLogs.sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp));
   document.getElementById('fm-min').value=''; document.getElementById('fm-time').value='';
   document.getElementById('feed-manual').classList.add('hidden');
-  renderFeedToday(); renderHome(); updateFeedSug();
+  renderFeedToday(); renderHome(); updateFeedSug(); saveData();
 }
 function renderFeedToday(){
   if(!baby) return;
@@ -876,12 +876,12 @@ function renderFeedToday(){
     </div>`;
   }).join('');
 }
-function deleteFeed(id){ fLogs=fLogs.filter(l=>l.id!==id); renderFeedToday(); renderHome(); updateFeedSug(); }
+function deleteFeed(id){ fLogs=fLogs.filter(l=>l.id!==id); renderFeedToday(); renderHome(); updateFeedSug(); saveData(); }
 
 // ===== DIAPER =====
 function quickDiaper(type){
   dLogs.unshift({id:Date.now(),type,timestamp:new Date().toISOString(),date:dateStr()});
-  renderDiaperToday(); renderHome();
+  renderDiaperToday(); renderHome(); saveData();
 }
 function selDmType(t){
   dmType=t;
@@ -895,7 +895,7 @@ function saveManualDiaper(){
   dLogs.sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp));
   document.getElementById('dm-time').value='';
   document.getElementById('diaper-manual').classList.add('hidden');
-  renderDiaperToday(); renderHome();
+  renderDiaperToday(); renderHome(); saveData();
 }
 function renderDiaperToday(){
   if(!baby) return;
@@ -924,7 +924,7 @@ function renderDiaperToday(){
       <button onclick="deleteDiaper(${l.id})" style="background:var(--dangerBg);border:1px solid rgba(155,32,32,.2);border-radius:7px;padding:5px 8px;cursor:pointer;color:var(--danger);font-size:11px;">Sil</button>
     </div>`).join('');
 }
-function deleteDiaper(id){ dLogs=dLogs.filter(l=>l.id!==id); renderDiaperToday(); renderHome(); }
+function deleteDiaper(id){ dLogs=dLogs.filter(l=>l.id!==id); renderDiaperToday(); renderHome(); saveData(); }
 
 // ===== VACCINE =====
 function renderVaccines(){
@@ -951,7 +951,7 @@ function renderVaccines(){
 }
 function toggleVax(id,isDone){
   if(isDone){ vDone=vDone.filter(v=>v!==id); } else { vDone.push(id); }
-  renderVaccines(); renderHome();
+  renderVaccines(); renderHome(); saveData();
 }
 
 // ===== GROWTH =====
@@ -970,7 +970,7 @@ function saveGrowth(){
     document.getElementById('growth-ana-content').innerHTML=anas.map(a=>chip(a.s,a.m)).join('');
     document.getElementById('growth-ana').classList.remove('hidden');
   }
-  renderGrowth(); renderHome();
+  renderGrowth(); renderHome(); saveData();
 }
 function renderGrowth(){
   if(!baby||!gLogs.length) return;
@@ -1007,7 +1007,7 @@ function renderSettingsBtns(){
   mkBtns('set-ns',[20,21,22,23],'nightStart');
 }
 function selSetting(key,val){ tmpSettings[key]=val; renderSettingsBtns(); }
-function saveSettings(){ settings={...tmpSettings}; closeSettings(); }
+function saveSettings(){ settings={...tmpSettings}; closeSettings(); saveData(); }
 
 // ===== MANUAL TOGGLE =====
 function toggleManual(type){
