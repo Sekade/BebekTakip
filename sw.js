@@ -1,4 +1,4 @@
-const CACHE_NAME = 'bebektakip-v2';
+const CACHE_NAME = 'bebektakip-v3';
 const urlsToCache = [
   './',
   './index.html',
