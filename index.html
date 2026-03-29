@@ -603,6 +603,7 @@ function doSetup(){
   baby={name,birthDate:birth,gender:selectedGender};
   document.getElementById('setup-page').classList.add('hidden');
   document.getElementById('main-app').classList.remove('hidden');
+  saveData();
   renderAll();
 }
 
@@ -635,7 +636,8 @@ function renderHome(){
   document.getElementById('pb-name').textContent=baby.name;
   document.getElementById('pb-info').textContent=age+' günlük · '+(baby.gender==='erkek'?'Erkek':'Kız')+' · '+DAYS[now.getDay()]+', '+now.getDate()+' '+MN[now.getMonth()];
   const latest=gLogs[0]||null;
-  document.getElementById('pb-weight').textContent=latest&&latest.weight?latest.weight+' kg':'—';
+  const wUnit = latest && latest.weight > 200 ? ' g' : ' kg';
+  document.getElementById('pb-weight').textContent=latest&&latest.weight?latest.weight+wUnit:'—';
   document.getElementById('pb-height').textContent=latest&&latest.height?latest.height+' cm':'—';
   document.getElementById('pb-dob').textContent=new Date(baby.birthDate).toLocaleDateString('tr-TR',{day:'2-digit',month:'short'});
 
@@ -1047,6 +1049,12 @@ function loadData() {
 // Uygulama açılışında verileri yükle
 window.addEventListener('DOMContentLoaded', () => {
   loadData();
+  // Yeni sürüm kontrolü (Eski cache'leri kırmak için)
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      window.location.reload();
+    });
+  }
 });
 </script>
 </body>
