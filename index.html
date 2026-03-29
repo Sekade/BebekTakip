@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bebek Takip: Anne & Bebek Günlüğü</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#7B3045">
+<link rel="apple-touch-icon" href="icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="application-name" content="Bebek Takip">
+<meta name="apple-mobile-web-app-title" content="Bebek Takip">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js')
+        .then(reg => console.log('Bebek Takip SW Kayıtlı', reg))
+        .catch(err => console.log('SW Hatası:', err));
+    });
+  }
+</script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:#FAF6F1;min-height:100vh;}
+#app{max-width:430px;margin:0 auto;padding-bottom:76px;}
+
+/* COLORS */
+:root{
+  --cream:#FAF6F1;--white:#FFFFFF;
+  --wine:#7B3045;--wineD:#5C1F32;--wineL:#F2E8EC;
+  --blush:#C4758A;--blushL:#FAEAEE;
+  --sage:#4A8870;--sageL:#E0F0EA;
+  --gold:#A07840;--goldL:#FBF3E6;
+  --text:#1E1218;--sub:#7A6070;--muted:#B0959F;--border:#E8DDD8;
+  --good:#2E7D52;--goodBg:#EAF5EE;
+  --warn:#8B5E10;--warnBg:#FEF4E2;
+  --danger:#9B2020;--dangerBg:#FDECEC;
+  --info:#1E5070;--infoBg:#E8F2F8;
+}
+
+.card{background:var(--white);border-radius:16px;padding:18px 20px;margin-bottom:10px;box-shadow:0 1px 4px rgba(60,20,30,0.06),0 4px 16px rgba(60,20,30,0.05);border:1px solid var(--border);}
+.btn-primary{background:var(--wine);color:#fff;border:none;border-radius:10px;padding:13px 20px;font-size:14px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;width:100%;letter-spacing:.3px;}
+.btn-primary:hover{opacity:.9;}
+.btn-small{padding:8px 14px;font-size:12px;width:auto;}
+input,select{width:100%;border:1.5px solid var(--border);border-radius:10px;padding:11px 14px;font-size:14px;font-family:'DM Sans',sans-serif;color:var(--text);background:var(--cream);outline:none;}
+label.lbl{font-size:10px;font-weight:600;color:var(--sub);letter-spacing:1.4px;margin-bottom:6px;display:block;text-transform:uppercase;}
+
+/* NAV */
+#nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--white);border-top:1px solid var(--border);display:flex;justify-content:space-around;padding:8px 0 12px;z-index:100;box-shadow:0 -2px 20px rgba(60,20,30,0.08);}
+.nav-btn{display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 10px;border:none;background:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:9px;font-weight:400;letter-spacing:.3px;text-transform:uppercase;color:var(--muted);}
+.nav-btn.active{color:var(--wine);font-weight:700;}
+.nav-btn .dot{width:20px;height:2px;border-radius:2px;background:var(--wine);margin-top:1px;}
+
+/* PAGES */
+.page{display:none;}
+.page.active{display:block;}
+
+/* HEADER GRADIENTS */
+.hdr-wine{background:linear-gradient(160deg,var(--wineD),var(--wine));padding:28px 20px 20px;color:#fff;}
+.hdr-sage{background:linear-gradient(160deg,var(--sage),#3d7a62);padding:26px 20px 20px;color:#fff;}
+.hdr-gold{background:linear-gradient(160deg,var(--gold),#8a6428);padding:26px 20px 20px;color:#fff;}
+.hdr-blue{background:linear-gradient(160deg,#3a5080,#2a3860);padding:26px 20px 20px;color:#fff;}
+.hdr-title{font-size:22px;font-weight:600;font-family:Cormorant Garamond,serif;letter-spacing:.5px;}
+.hdr-sub{font-size:11px;opacity:.75;margin-top:3px;}
+
+.section-label{font-size:9px;font-weight:600;color:var(--sub);letter-spacing:1.4px;text-transform:uppercase;margin-bottom:12px;}
+.chip{border-radius:9px;padding:8px 12px;font-size:12px;font-weight:500;margin-bottom:7px;display:flex;gap:7px;align-items:flex-start;line-height:1.5;}
+.chip.good{background:var(--goodBg);color:var(--good);border:1px solid rgba(46,125,82,.13);}
+.chip.warn{background:var(--warnBg);color:var(--warn);border:1px solid rgba(139,94,16,.13);}
+.chip.danger{background:var(--dangerBg);color:var(--danger);border:1px solid rgba(155,32,32,.13);}
+.chip.info{background:var(--infoBg);color:var(--info);border:1px solid rgba(30,80,112,.13);}
+
+/* TIMER */
+#timer-display{font-size:60px;font-weight:700;color:var(--wine);letter-spacing:4px;font-variant-numeric:tabular-nums;font-family:Cormorant Garamond,serif;text-align:center;}
+
+/* TOGGLE BTNS */
+.toggle-group{display:flex;gap:8px;margin-bottom:12px;}
+.toggle-btn{flex:1;padding:11px;border:1.5px solid var(--border);border-radius:10px;background:var(--white);color:var(--sub);font-weight:400;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;}
+.toggle-btn.sel{border-color:var(--wine);background:var(--wineL);color:var(--wine);font-weight:600;}
+
+.hidden{display:none!important;}
+.day-btn{flex:1;padding:8px 4px;border-radius:10px;border:1.5px solid var(--border);background:var(--white);color:var(--sub);font-size:11px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;}
+.day-btn.active{border-color:var(--wine);background:var(--wineL);color:var(--wine);font-weight:700;}
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- SETUP PAGE -->
+  <div id="setup-page" style="background:var(--cream);min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding:28px 22px;">
+    <div style="text-align:center;margin-bottom:36px;">
+      <div style="width:64px;height:64px;border-radius:50%;background:var(--wineL);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;color:var(--wine);">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 1 0-16 0"/></svg>
+      </div>
+      <div style="font-size:32px;font-weight:600;font-family:Cormorant Garamond,serif;color:var(--wine);">Bebek Takip</div>
+      <div style="font-size:13px;color:var(--sub);margin-top:6px;">Bebeğinizin profilini oluşturun</div>
+    </div>
+    <div class="card">
+      <div style="margin-bottom:14px;"><label class="lbl">Bebek Adı</label><input id="s-name" placeholder="Ad ve soyad"></div>
+      <div style="margin-bottom:14px;"><label class="lbl">Doğum Tarihi</label><input id="s-birth" type="date"></div>
+      <div style="margin-bottom:22px;">
+        <label class="lbl">Cinsiyet</label>
+        <div style="display:flex;gap:10px;">
+          <button class="toggle-btn" id="g-erkek" onclick="selGender('erkek')">Erkek</button>
+          <button class="toggle-btn" id="g-kiz" onclick="selGender('kız')">Kız</button>
+        </div>
+      </div>
+      <button class="btn-primary" onclick="doSetup()">Profili Oluştur</button>
+    </div>
+  </div>
+
+  <!-- MAIN APP -->
+  <div id="main-app" class="hidden">
+    <!-- HOME -->
+    <div id="page-home" class="page active">
+      <!-- Profile Band -->
+      <div id="profile-band" style="background:linear-gradient(160deg,var(--wineD) 0%,var(--wine) 60%,var(--blush) 100%);padding:28px 20px 20px;position:relative;overflow:hidden;">
+        <div style="position:absolute;top:-30px;right:-30px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,0.05);"></div>
+        <div style="position:relative;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+            <div>
+              <div id="pb-name" style="font-size:26px;font-weight:600;font-family:Cormorant Garamond,serif;color:#fff;"></div>
+              <div id="pb-info" style="font-size:13px;color:rgba(255,255,255,0.75);margin-top:3px;"></div>
+            </div>
+            <button onclick="openSettings()" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.25);border-radius:10px;padding:8px 10px;cursor:pointer;color:#fff;display:flex;align-items:center;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            </button>
+          </div>
+          <div style="display:flex;gap:10px;margin-top:14px;">
+            <div style="background:rgba(255,255,255,0.13);border-radius:10px;padding:8px 12px;flex:1;">
+              <div style="font-size:9px;font-weight:600;color:rgba(255,255,255,0.65);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;">Kilo</div>
+              <div id="pb-weight" style="font-size:15px;font-weight:600;color:#fff;font-family:Cormorant Garamond,serif;">—</div>
+            </div>
+            <div style="background:rgba(255,255,255,0.13);border-radius:10px;padding:8px 12px;flex:1;">
+              <div style="font-size:9px;font-weight:600;color:rgba(255,255,255,0.65);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;">Boy</div>
+              <div id="pb-height" style="font-size:15px;font-weight:600;color:#fff;font-family:Cormorant Garamond,serif;">—</div>
+            </div>
+            <div style="background:rgba(255,255,255,0.13);border-radius:10px;padding:8px 12px;flex:1;">
+              <div style="font-size:9px;font-weight:600;color:rgba(255,255,255,0.65);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;">Doğum</div>
+              <div id="pb-dob" style="font-size:15px;font-weight:600;color:#fff;font-family:Cormorant Garamond,serif;">—</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="padding:12px 14px 0;">
+        <!-- Next feed card -->
+        <div class="card" style="border-left:3px solid var(--wine);">
+          <div class="section-label">Sonraki Emzirme Önerisi</div>
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+            <div style="flex:1;">
+              <div id="home-sug" style="font-size:22px;font-weight:600;font-family:Cormorant Garamond,serif;color:var(--wine);margin-bottom:8px;">Sağ Meme →</div>
+              <div id="home-next-feed" style="font-size:12px;color:var(--muted);"></div>
+              <div id="home-last-feed" style="font-size:11px;color:var(--muted);margin-top:4px;"></div>
+            </div>
+            <button class="btn-primary btn-small" style="background:var(--wine);white-space:nowrap;" onclick="goPage('feeding')">Emzir</button>
+          </div>
+        </div>
+        <!-- Next vaccine -->
+        <div class="card" id="home-vax-card" style="border-left:3px solid var(--sage);">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div>
+              <div class="section-label">Sıradaki Aşı</div>
+              <div id="home-vax-name" style="font-size:15px;font-weight:600;color:var(--text);"></div>
+              <div id="home-vax-left" style="font-size:12px;font-weight:600;margin-top:3px;color:var(--sage);"></div>
+            </div>
+            <button class="btn-primary btn-small" style="background:var(--sage);" onclick="goPage('vaccine')">Takvim</button>
+          </div>
+        </div>
+        <!-- Combined Feeding + Diaper today -->
+        <div class="card" style="border-left:3px solid var(--wine);">
+          <!-- Emzirme bölümü -->
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;">
+            <div style="flex:1;">
+              <div class="section-label" style="color:var(--wine);">🍼 Bugünkü Emzirme</div>
+              <div style="display:flex;gap:16px;flex-wrap:wrap;">
+                <div><div id="home-feed-left" style="font-size:24px;font-weight:700;font-family:Cormorant Garamond,serif;color:var(--sage);">0</div><div style="font-size:10px;color:var(--muted);">Sol ←</div></div>
+                <div><div id="home-feed-right" style="font-size:24px;font-weight:700;font-family:Cormorant Garamond,serif;color:var(--wine);">0</div><div style="font-size:10px;color:var(--muted);">→ Sağ</div></div>
+                <div><div id="home-feed-total" style="font-size:24px;font-weight:700;font-family:Cormorant Garamond,serif;color:var(--text);">0</div><div style="font-size:10px;color:var(--muted);">Toplam</div></div>
+                <div><div id="home-feed-min" style="font-size:24px;font-weight:700;font-family:Cormorant Garamond,serif;color:var(--gold);">0</div><div style="font-size:10px;color:var(--muted);">Dakika</div></div>
+              </div>
+              <div id="home-feed-ana" style="margin-top:8px;"></div>
+            </div>
+            <button class="btn-primary btn-small" style="background:var(--wine);white-space:nowrap;margin-left:8px;" onclick="goPage('feeding')">Emzir</button>
+          </div>
+          <!-- Ayırıcı çizgi -->
+          <div style="border-top:1px solid var(--border);margin-bottom:14px;"></div>
+          <!-- Bez bölümü -->
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+            <div style="flex:1;">
+              <div class="section-label" style="color:var(--sage);">🌿 Bugünkü Bez</div>
+              <div style="display:flex;gap:22px;">
+                <div><div id="home-wet" style="font-size:24px;font-weight:700;font-family:Cormorant Garamond,serif;color:var(--sage);">0</div><div style="font-size:10px;color:var(--muted);">Islak</div></div>
+                <div><div id="home-dirty" style="font-size:24px;font-weight:700;font-family:Cormorant Garamond,serif;color:var(--blush);">0</div><div style="font-size:10px;color:var(--muted);">Kaka</div></div>
+                <div><div id="home-total-d" style="font-size:24px;font-weight:700;font-family:Cormorant Garamond,serif;color:var(--text);">0</div><div style="font-size:10px;color:var(--muted);">Toplam</div></div>
+              </div>
+              <div id="home-diaper-ana" style="margin-top:8px;"></div>
+            </div>
+            <button class="btn-primary btn-small" style="background:var(--gold);white-space:nowrap;margin-left:8px;" onclick="goPage('diaper')">Kaydet</button>
+          </div>
+        </div>
+
+        <!-- Geçmiş Günler -->
+        <div class="card">
+          <div class="section-label">📅 Geçmiş Kayıtlar</div>
+          <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;" id="day-btns-row"></div>
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:14px;">
+            <input type="date" id="history-date-picker" style="flex:1;font-size:13px;padding:8px 12px;" oninput="selDayByDate(this.value)">
+          </div>
+          <div id="day-history-content"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FEEDING -->
+    <div id="page-feeding" class="page">
+      <div class="hdr-wine">
+        <div class="hdr-title">Emzirme Takibi</div>
+        <div class="hdr-sub" id="feed-hdr-sub">Önerilen: Sağ Meme →</div>
+      </div>
+      <div style="padding:12px 14px 0;">
+        <div class="card" style="background:var(--wineL);border:1px solid rgba(123,48,69,.13);text-align:center;padding:12px 18px;">
+          <div style="font-size:9px;color:var(--muted);font-weight:600;letter-spacing:1.4px;text-transform:uppercase;margin-bottom:4px;">Önerilen Meme</div>
+          <div id="feed-sug" style="font-size:20px;font-weight:600;font-family:Cormorant Garamond,serif;color:var(--wine);">Sağ Meme →</div>
+        </div>
+
+        <!-- Start buttons -->
+        <div id="feed-start-btns" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+          <button onclick="startFeed('left')" style="background:var(--sageL);border:1.5px solid rgba(74,136,112,.13);border-radius:16px;padding:26px 8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;font-family:'DM Sans',sans-serif;">
+            <span style="font-size:28px;color:var(--sage);font-weight:700;font-family:Cormorant Garamond,serif;">←</span>
+            <span style="font-size:14px;font-weight:600;color:var(--sage);">Sol Meme</span>
+            <span style="font-size:11px;color:var(--muted);">Başlat</span>
+          </button>
+          <button onclick="startFeed('right')" style="background:var(--wineL);border:1.5px solid rgba(123,48,69,.13);border-radius:16px;padding:26px 8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;font-family:'DM Sans',sans-serif;">
+            <span style="font-size:28px;color:var(--wine);font-weight:700;font-family:Cormorant Garamond,serif;">→</span>
+            <span style="font-size:14px;font-weight:600;color:var(--wine);">Sağ Meme</span>
+            <span style="font-size:11px;color:var(--muted);">Başlat</span>
+          </button>
+        </div>
+
+        <!-- Active timer -->
+        <div id="feed-timer-card" class="card hidden" style="text-align:center;padding:24px 20px;">
+          <div id="feed-timer-side" style="font-size:11px;color:var(--muted);margin-bottom:4px;"></div>
+          <div id="timer-display">00:00</div>
+          <div id="feed-timer-sub" style="font-size:13px;color:var(--muted);margin-top:4px;margin-bottom:18px;">0 dk 0 sn</div>
+          <div style="display:flex;gap:10px;">
+            <button id="feed-pause-btn" onclick="togglePause()" style="flex:1;background:var(--warnBg);color:var(--warn);border:1.5px solid var(--warn);border-radius:10px;padding:13px;font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;">Duraklat</button>
+            <button onclick="saveFeed()" style="flex:1;background:var(--wine);color:#fff;border:none;border-radius:10px;padding:13px;font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;">✓ Kaydet</button>
+          </div>
+          <button onclick="cancelFeed()" style="margin-top:10px;background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;">İptal</button>
+        </div>
+
+        <div id="feed-ana" class="hidden" style="margin-bottom:10px;"></div>
+
+        <!-- Manuel -->
+        <div class="card">
+          <button onclick="toggleManual('feed')" style="background:none;border:none;color:var(--wine);font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;padding:0;width:100%;text-align:left;">+ Manuel Kayıt Ekle</button>
+          <div id="feed-manual" class="hidden" style="margin-top:14px;">
+            <label class="lbl">Meme</label>
+            <div class="toggle-group">
+              <button class="toggle-btn" id="fm-left" onclick="selFmSide('left')">← Sol</button>
+              <button class="toggle-btn sel" id="fm-right" onclick="selFmSide('right')">→ Sağ</button>
+            </div>
+            <label class="lbl">Süre (dakika)</label>
+            <input id="fm-min" type="number" placeholder="15" style="margin-bottom:12px;">
+            <label class="lbl">Saat (boş = şimdi)</label>
+            <input id="fm-time" type="time" style="margin-bottom:14px;">
+            <button class="btn-primary" onclick="saveManualFeed()">Kaydet</button>
+          </div>
+        </div>
+
+        <!-- Today logs -->
+        <div class="card">
+          <div class="section-label">Bugünkü Kayıtlar</div>
+          <div id="feed-today-list"><div style="color:var(--muted);font-size:13px;text-align:center;padding:16px 0;">Henüz kayıt bulunmuyor</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DIAPER -->
+    <div id="page-diaper" class="page">
+      <div class="hdr-sage">
+        <div class="hdr-title">Bez Takibi</div>
+        <div class="hdr-sub">Günlük bez değişimlerini kaydedin</div>
+      </div>
+      <div style="padding:12px 14px 0;">
+        <div class="card">
+          <div class="section-label">Hızlı Kayıt</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+            <button onclick="quickDiaper('wet')" style="background:var(--sageL);border:1.5px solid rgba(74,136,112,.13);border-radius:14px;padding:20px 6px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;font-family:'DM Sans',sans-serif;">
+              <span style="color:var(--sage);">💧</span>
+              <span style="font-size:12px;font-weight:600;color:var(--sage);">Islak</span>
+            </button>
+            <button onclick="quickDiaper('dirty')" style="background:var(--blushL);border:1.5px solid rgba(196,117,138,.13);border-radius:14px;padding:20px 6px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;font-family:'DM Sans',sans-serif;">
+              <span style="color:var(--blush);">💩</span>
+              <span style="font-size:12px;font-weight:600;color:var(--blush);">Kaka</span>
+            </button>
+            <button onclick="quickDiaper('both')" style="background:var(--goldL);border:1.5px solid rgba(160,120,64,.13);border-radius:14px;padding:20px 6px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;font-family:'DM Sans',sans-serif;">
+              <span style="color:var(--gold);">🔄</span>
+              <span style="font-size:12px;font-weight:600;color:var(--gold);">İkisi de</span>
+            </button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="section-label">Bugünkü Durum</div>
+          <div style="display:flex;justify-content:space-around;margin-bottom:12px;">
+            <div style="text-align:center;"><div id="d-wet" style="font-size:32px;font-weight:700;font-family:Cormorant Garamond,serif;color:var(--sage);">0</div><div style="font-size:10px;color:var(--muted);margin-top:2px;">Islak</div></div>
+            <div style="text-align:center;"><div id="d-dirty" style="font-size:32px;font-weight:700;font-family:Cormorant Garamond,serif;color:var(--blush);">0</div><div style="font-size:10px;color:var(--muted);margin-top:2px;">Kaka</div></div>
+            <div style="text-align:center;"><div id="d-total" style="font-size:32px;font-weight:700;font-family:Cormorant Garamond,serif;color:var(--text);">0</div><div style="font-size:10px;color:var(--muted);margin-top:2px;">Toplam</div></div>
+          </div>
+          <div id="d-ana"></div>
+        </div>
+        <div class="card">
+          <button onclick="toggleManual('diaper')" style="background:none;border:none;color:var(--wine);font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;padding:0;width:100%;text-align:left;">+ Manuel Kayıt Ekle</button>
+          <div id="diaper-manual" class="hidden" style="margin-top:14px;">
+            <label class="lbl">Bez Türü</label>
+            <div class="toggle-group">
+              <button class="toggle-btn sel" id="dm-wet" onclick="selDmType('wet')">Islak</button>
+              <button class="toggle-btn" id="dm-dirty" onclick="selDmType('dirty')">Kaka</button>
+              <button class="toggle-btn" id="dm-both" onclick="selDmType('both')">İkisi</button>
+            </div>
+            <label class="lbl">Saat (boş = şimdi)</label>
+            <input id="dm-time" type="time" style="margin-bottom:14px;">
+            <button class="btn-primary" onclick="saveManualDiaper()">Kaydet</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="section-label">Son Kayıtlar</div>
+          <div id="diaper-list"><div style="color:var(--muted);font-size:13px;text-align:center;padding:14px 0;">Henüz kayıt bulunmuyor</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VACCINE -->
+    <div id="page-vaccine" class="page">
+      <div class="hdr-gold">
+        <div class="hdr-title">Aşı Takvimi</div>
+        <div class="hdr-sub">Türkiye Ulusal Aşı Programı</div>
+      </div>
+      <div style="padding:12px 14px 0;" id="vaccine-list"></div>
+    </div>
+
+    <!-- GROWTH -->
+    <div id="page-growth" class="page">
+      <div class="hdr-blue">
+        <div class="hdr-title">Büyüme Takibi</div>
+        <div class="hdr-sub">Kilo ve boy ölçümlerini kaydedin</div>
+      </div>
+      <div style="padding:12px 14px 0;">
+        <div id="growth-latest" class="hidden card" style="border-left:3px solid #3a5080;">
+          <div class="section-label" id="growth-latest-lbl">Son Ölçüm</div>
+          <div style="display:flex;gap:20px;">
+            <div id="gl-w"></div>
+            <div id="gl-h"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="section-label">Yeni Ölçüm Ekle</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+            <div><label class="lbl">Kilo (kg)</label><input id="g-w" type="number" step="0.01" placeholder="3.50"></div>
+            <div><label class="lbl">Boy (cm)</label><input id="g-h" type="number" step="0.5" placeholder="52.0"></div>
+          </div>
+          <label class="lbl">Tarih (boş = bugün)</label>
+          <input id="g-date" type="date" style="margin-bottom:16px;">
+          <button class="btn-primary" onclick="saveGrowth()">Kaydet</button>
+        </div>
+        <div id="growth-ana" class="hidden card">
+          <div class="section-label">Analiz</div>
+          <div id="growth-ana-content"></div>
+        </div>
+        <div id="growth-history-card" class="hidden card">
+          <div class="section-label">Ölçüm Geçmişi</div>
+          <div id="growth-history"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- NAV -->
+    <nav id="nav">
+      <button class="nav-btn active" id="nav-home" onclick="goPage('home')">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <span>Ana Ekran</span>
+        <div class="dot"></div>
+      </button>
+      <button class="nav-btn" id="nav-feeding" onclick="goPage('feeding')">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        <span>Emzirme</span>
+        <div class="dot hidden"></div>
+      </button>
+      <button class="nav-btn" id="nav-diaper" onclick="goPage('diaper')">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+        <span>Bez</span>
+        <div class="dot hidden"></div>
+      </button>
+      <button class="nav-btn" id="nav-vaccine" onclick="goPage('vaccine')">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m18 2 4 4"/><path d="m17 7 3-3"/><path d="M19 9 8.7 19.3c-1 1-2.5 1-3.4 0l-.6-.6c-1-1-1-2.5 0-3.4L15 5"/><path d="m9 11 4 4"/><path d="m5 19-3 3"/><path d="m14 4 6 6"/></svg>
+        <span>Aşı</span>
+        <div class="dot hidden"></div>
+      </button>
+      <button class="nav-btn" id="nav-growth" onclick="goPage('growth')">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+        <span>Büyüme</span>
+        <div class="dot hidden"></div>
+      </button>
+    </nav>
+  </div>
+
+  <!-- SETTINGS MODAL -->
+  <div id="settings-modal" class="hidden" style="position:fixed;inset:0;background:rgba(30,18,24,0.5);z-index:200;display:flex;align-items:flex-end;justify-content:center;">
+    <div style="background:var(--white);border-radius:20px 20px 0 0;padding:24px 22px 36px;width:100%;max-width:430px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:22px;">
+        <div style="font-size:18px;font-weight:600;font-family:Cormorant Garamond,serif;color:var(--wine);">Emzirme Ayarları</div>
+        <button onclick="closeSettings()" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:20px;">✕</button>
+      </div>
+      <label class="lbl">☀️ Gündüz Aralığı (saat)</label>
+      <div id="set-dh" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;"></div>
+      <label class="lbl">🌙 Gece Aralığı (saat)</label>
+      <div id="set-nh" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:22px;">
+        <div>
+          <label class="lbl">☀️ Gündüz Başlangıcı</label>
+          <div id="set-ds" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+        </div>
+        <div>
+          <label class="lbl">🌙 Gece Başlangıcı</label>
+          <div id="set-ns" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+        </div>
+      </div>
+      <button class="btn-primary" onclick="saveSettings()">Kaydet</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== STATE =====
+let baby = null;
+let fLogs = [], dLogs = [], gLogs = [], vDone = [];
+let settings = {dayStart:7, nightStart:22, dayHours:2, nightHours:3};
+let timerInterval = null, timerSec = 0, timerRunning = false, timerSide = null;
+let selectedGender = '';
+let fmSide = 'right', dmType = 'wet';
+let tmpSettings = {};
+
+const VACCINES = [
+  {id:"hepb1",  name:"Hepatit B — 1. Doz",        targetDay:0,   desc:"Doğumda"},
+  {id:"bcg",    name:"BCG (Tüberküloz)",            targetDay:0,   desc:"Doğumda"},
+  {id:"hepb2",  name:"Hepatit B — 2. Doz",         targetDay:30,  desc:"1. ay"},
+  {id:"dbt1",   name:"DBT-İPA-Hib — 1. Doz",       targetDay:60,  desc:"2. ay"},
+  {id:"pnomo1", name:"Pnömokok — 1. Doz",          targetDay:60,  desc:"2. ay"},
+  {id:"dbt2",   name:"DBT-İPA-Hib — 2. Doz",       targetDay:120, desc:"4. ay"},
+  {id:"pnomo2", name:"Pnömokok — 2. Doz",          targetDay:120, desc:"4. ay"},
+  {id:"dbt3",   name:"DBT-İPA-Hib — 3. Doz",       targetDay:180, desc:"6. ay"},
+  {id:"hepb3",  name:"Hepatit B — 3. Doz",         targetDay:180, desc:"6. ay"},
+  {id:"kkk1",   name:"KKK (Kızamık-Kabakulak)",    targetDay:365, desc:"12. ay"},
+  {id:"pnomo3", name:"Pnömokok — 3. Doz",          targetDay:365, desc:"12. ay"},
+  {id:"suci1",  name:"Suçiçeği — 1. Doz",          targetDay:365, desc:"12. ay"},
+  {id:"hepa1",  name:"Hepatit A — 1. Doz",         targetDay:365, desc:"12. ay"},
+  {id:"dbtpek", name:"DBT-İPA-Hib Pekiştirme",     targetDay:540, desc:"18. ay"},
+  {id:"hepa2",  name:"Hepatit A — 2. Doz",         targetDay:540, desc:"18. ay"},
+  {id:"suci2",  name:"Suçiçeği — 2. Doz",          targetDay:730, desc:"24. ay"},
+];
+
+// ===== HELPERS =====
+function dateStr(d){ d=d||new Date(); return d.toISOString().split('T')[0]; }
+function dayAge(bd){ const b=new Date(bd),t=new Date(); b.setHours(0,0,0,0); t.setHours(0,0,0,0); return Math.floor((t-b)/86400000); }
+function fmtDur(s){ return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0'); }
+function timeSince(iso){ const m=(Date.now()-new Date(iso))/60000; if(m<1)return'Az önce'; if(m<60)return Math.round(m)+' dk önce'; const h=Math.floor(m/60); return h+' sa '+Math.round(m%60)+' dk önce'; }
+function trTime(iso){ return new Date(iso).toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'}); }
+
+function chip(s,m){
+  const map={good:['goodBg','good','✓'],warn:['warnBg','warn','!'],danger:['dangerBg','danger','!!'],info:['infoBg','info','i']};
+  const[bg,,ic]=map[s]||map.info;
+  return `<div class="chip ${s}"><span style="font-weight:700;flex-shrink:0;">${ic}</span>${m}</div>`;
+}
+
+function analyzeFeed(age, min){
+  // Per-feed (single session) analysis
+  if(min < 2) return {s:'danger', m:`Sadece ${min} dk emme ciddi şekilde az — bebeğin yeterli süt alamıyor olabilir, doktora danışın.`};
+  if(age <= 3){
+    if(min < 8)  return {s:'warn',   m:`İlk 3 günde en az 8-10 dk emme önerilir; ${min} dk biraz kısa kaldı.`};
+    if(min <= 40) return {s:'good',  m:`Yenidoğan için ${min} dk güzel bir emzirme süresi.`};
+    return {s:'info', m:`${min} dk oldukça uzun — bebeğin emmesi verimli mi kontrol edin.`};
+  }
+  if(age <= 14){
+    if(min < 10) return {s:'warn',  m:`${min} dk az; ilk 2 haftada 10-20 dk hedeflenmeli.`};
+    if(min <= 30) return {s:'good', m:`${min} dk ile güçlü bir emzirme seansı.`};
+    return {s:'info', m:`${min} dk uzun sürdü; bebeğin aktif mi emdiğini gözlemleyin.`};
+  }
+  if(age <= 90){
+    if(min < 7)  return {s:'warn',  m:`${min} dk kısa; 2-3. ayda 7-15 dk yeterlidir ama bebeğin doyduğundan emin olun.`};
+    if(min <= 20) return {s:'good', m:`${min} dk — bebekler bu dönemde daha verimli emer, süre normal.`};
+    return {s:'info', m:`${min} dk; bebekler 3 aydan sonra genellikle 5-15 dk'da doyana kadar emer.`};
+  }
+  if(min < 5)  return {s:'warn',  m:`${min} dk çok kısa — bebek gerçekten doydu mu kontrol edin.`};
+  if(min <= 15) return {s:'good', m:`${min} dk — büyük bebekler hızlı ve verimli emer, süre yeterli.`};
+  return {s:'good', m:`${min} dk ile uzun ve besleyici bir seans.`};
+}
+
+function analyzeFeedDaily(age, count, totalMin, rightCount, leftCount){
+  // Daily feeding analysis - much richer
+  let results = [];
+  const avgMin = count > 0 ? Math.round(totalMin / count) : 0;
+
+  // Frequency check
+  if(age <= 7){
+    if(count < 8)  results.push({s:'warn',  m:`Yenidoğanlar günde 8-12 kez emzirilmeli; bugün ${count} kez yapıldı — biraz az.`});
+    else if(count <= 12) results.push({s:'good', m:`Yenidoğan için günde ${count} kez emzirme idealdir. 👶`});
+    else results.push({s:'info', m:`Günde ${count} kez çok sık olabilir; kluster feeding normal ama yorucu.`});
+  } else if(age <= 30){
+    if(count < 7)  results.push({s:'warn',  m:`İlk ayda günde 8-10 kez önerilir; bugün ${count} kez kaldı.`});
+    else if(count <= 10) results.push({s:'good', m:`Bu dönemde günde ${count} kez emzirme sıklığı gayet güzel.`});
+    else results.push({s:'info', m:`Günde ${count} kez yoğun; büyüme atlaması (growth spurt) yaşanıyor olabilir.`});
+  } else if(age <= 90){
+    if(count < 6)  results.push({s:'warn',  m:`2-3. ayda günde 6-8 kez beklenir; bugün ${count} kez az görünüyor.`});
+    else if(count <= 8) results.push({s:'good', m:`Günde ${count} kez emzirme, bu yaş için düzenli bir ritim. ✅`});
+    else results.push({s:'info', m:`${count} kez biraz yoğun; bebek gelişim atlamasında olabilir.`});
+  } else {
+    if(count < 4)  results.push({s:'warn',  m:`Bu yaşta günde en az 4-6 emzirme önerilir; ${count} kez az.`});
+    else if(count <= 6) results.push({s:'good', m:`${count} kez düzenli ve yeterli bir emzirme günü. ✅`});
+    else results.push({s:'info', m:`Günde ${count} kez; katı gıda başlandıysa emzirme sıklığı azalabilir.`});
+  }
+
+  // Total duration
+  if(count > 0){
+    if(age <= 30 && totalMin < 60) results.push({s:'warn', m:`Günlük toplam ${totalMin} dk biraz düşük; yenidoğanlarda 90-150 dk normal.`});
+    else if(age <= 30 && totalMin <= 180) results.push({s:'good', m:`Toplam ${totalMin} dk emzirme süresi bu dönem için güzel.`});
+    else if(age > 30 && totalMin >= 40) results.push({s:'good', m:`Gün boyunca toplam ${totalMin} dk emzirme yeterli beslenmeye işaret ediyor.`});
+  }
+
+  // Balance check
+  if(count >= 2){
+    const diff = Math.abs(rightCount - leftCount);
+    if(diff >= 3) results.push({s:'warn', m:`Meme dengesi: Sol ${leftCount} / Sağ ${rightCount} — bir meme çok daha fazla kullanıldı, değişimi dengeleyin.`});
+    else if(diff <= 1) results.push({s:'good', m:`Sol ${leftCount} / Sağ ${rightCount} — memeler dengeli kullanılmış. ⚖️`});
+    else results.push({s:'info', m:`Sol ${leftCount} / Sağ ${rightCount} — hafif dengesizlik var, bir sonraki seansta dengelenir.`});
+  }
+
+  return results;
+}
+
+function analyzeDiaper(age, wet, dirty){
+  let r = [];
+  // Wet diapers
+  if(age <= 2){
+    r.push(wet < age+1 ? {s:'warn', m:`İlk günlerde bez sayısı yaşla orantılı olmalı (${age}. günde ${age+1}+ ıslak bez); bugün ${wet} tane.`} : {s:'good', m:`${wet} ıslak bez — yenidoğan için iyi hidrasyon işareti.`});
+  } else if(age <= 7){
+    r.push(wet < 6 ? {s:'warn', m:`${wet} ıslak bez az; 1. haftadan sonra günde 6+ beklenir, süt artışı henüz tam olmayabilir.`} : {s:'good', m:`${wet} ıslak bez — bebeğin yeterli sıvı aldığının güvenilir göstergesi. 💧`});
+  } else if(age <= 90){
+    if(wet < 6) r.push({s:'warn', m:`Günde ${wet} ıslak bez idealin altında (6-8 beklenir) — emzirme sıklığını artırın.`});
+    else if(wet <= 8) r.push({s:'good', m:`${wet} ıslak bez mükemmel; bebeğin hidrasyon dengesi yerinde.`});
+    else r.push({s:'info', m:`${wet} ıslak bez çok — sıvı alımı bol; bu dönemde normal olabilir.`});
+  } else {
+    if(wet < 4) r.push({s:'warn', m:`Günde ${wet} ıslak bez düşük; katı gıdaya geçiş döneminde bile 4-6 beklenir.`});
+    else r.push({s:'good', m:`${wet} ıslak bez — yeterli sıvı alıyor.`});
+  }
+
+  // Dirty diapers
+  if(age <= 7){
+    if(dirty === 0) r.push({s:'warn', m:`İlk haftada her gün dışkılama beklenir; bugün hiç kaka bezi kaydedilmedi.`});
+    else if(dirty >= 1 && dirty <= 5) r.push({s:'good', m:`${dirty} kaka bezi — yenidoğan için normal aralıkta.`});
+    else r.push({s:'info', m:`${dirty} kaka bezi çok fazla; sıvı dışkı devam ederse doktora söyleyin.`});
+  } else if(age <= 60){
+    if(dirty === 0) r.push({s:'info', m:`2. ayda her gün kaka olmayabilir; bu yaşta arada sırada atlama normaldir.`});
+    else r.push({s:'good', m:`${dirty} kaka bezi — bağırsak hareketleri aktif.`});
+  } else {
+    if(dirty === 0) r.push({s:'info', m:`Büyük bebeklerde 2-3 günde bir dışkılama normaldir; endişe yok.`});
+    else r.push({s:'good', m:`${dirty} kaka bezi — bağırsak düzeni güzel.`});
+  }
+
+  return r;
+}
+
+function analyzeGrowth(age,w,h,gender){
+  const mo=age/30.44; let r=[];
+  if(w){ const med=gender==='erkek'?3.3+mo*0.62:3.2+mo*0.56,rat=w/med;
+    if(rat<0.82) r.push({s:'danger',m:`Kilo (${w} kg) yaşa göre düşük — doktora danışın.`});
+    else if(rat<0.90) r.push({s:'warn',m:`Kilo (${w} kg) biraz düşük — takip edin.`});
+    else if(rat>1.20) r.push({s:'info',m:`Kilo (${w} kg) ortalamanın üstünde.`});
+    else r.push({s:'good',m:`Kilo (${w} kg) normal aralıkta.`}); }
+  if(h){ const medH=gender==='erkek'?49.5+mo*2.4:49+mo*2.3,rat=h/medH;
+    if(rat<0.95) r.push({s:'warn',m:`Boy (${h} cm) yaşa göre kısa — doktora danışın.`});
+    else if(rat>1.05) r.push({s:'info',m:`Boy (${h} cm) ortalamanın biraz üstünde.`});
+    else r.push({s:'good',m:`Boy (${h} cm) normal aralıkta.`}); }
+  return r;
+}
+
+// ===== SETUP =====
+function selGender(g){
+  selectedGender=g;
+  document.getElementById('g-erkek').className='toggle-btn'+(g==='erkek'?' sel':'');
+  document.getElementById('g-kiz').className='toggle-btn'+(g==='kız'?' sel':'');
+}
+
+function doSetup(){
+  const name=document.getElementById('s-name').value.trim();
+  const birth=document.getElementById('s-birth').value;
+  if(!name||!birth||!selectedGender){ alert('Lütfen tüm alanları doldurun.'); return; }
+  baby={name,birthDate:birth,gender:selectedGender};
+  document.getElementById('setup-page').classList.add('hidden');
+  document.getElementById('main-app').classList.remove('hidden');
+  renderAll();
+}
+
+// ===== NAVIGATION =====
+const PAGES=['home','feeding','diaper','vaccine','growth'];
+function goPage(p){
+  PAGES.forEach(id=>{
+    document.getElementById('page-'+id).classList.toggle('active',id===p);
+    const nb=document.getElementById('nav-'+id);
+    nb.classList.toggle('active',id===p);
+    nb.querySelector('.dot').classList.toggle('hidden',id!==p);
+  });
+  if(p==='home') renderHome();
+  if(p==='vaccine') renderVaccines();
+}
+
+// ===== RENDER ALL =====
+function renderAll(){ saveData(); renderHome(); renderFeedToday(); renderDiaperToday(); renderVaccines(); renderGrowth(); }
+
+// ===== HOME =====
+let selectedDayOffset = 0;
+
+function renderHome(){
+  if(!baby) return;
+  const age=dayAge(baby.birthDate);
+  const today=dateStr();
+  const DAYS=['Paz','Pzt','Sal','Çar','Per','Cum','Cmt'];
+  const MN=['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'];
+  const now=new Date();
+  document.getElementById('pb-name').textContent=baby.name;
+  document.getElementById('pb-info').textContent=age+' günlük · '+(baby.gender==='erkek'?'Erkek':'Kız')+' · '+DAYS[now.getDay()]+', '+now.getDate()+' '+MN[now.getMonth()];
+  const latest=gLogs[0]||null;
+  document.getElementById('pb-weight').textContent=latest&&latest.weight?latest.weight+' kg':'—';
+  document.getElementById('pb-height').textContent=latest&&latest.height?latest.height+' cm':'—';
+  document.getElementById('pb-dob').textContent=new Date(baby.birthDate).toLocaleDateString('tr-TR',{day:'2-digit',month:'short'});
+
+  // Suggestion
+  const last=fLogs[0]||null;
+  const sug=last?(last.side==='right'?'left':'right'):'right';
+  document.getElementById('home-sug').textContent=sug==='right'?'Sağ Meme →':'← Sol Meme';
+  if(last){
+    const nowH=new Date().getHours();
+    const isNight=nowH>=settings.nightStart||nowH<settings.dayStart;
+    const intervalH=isNight?settings.nightHours:settings.dayHours;
+    const nextMs=new Date(last.timestamp).getTime()+intervalH*3600000;
+    const leftMs=nextMs-Date.now();
+    const nextTime=new Date(nextMs).toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'});
+    if(leftMs<=0){ document.getElementById('home-next-feed').innerHTML='<span style="color:var(--danger);font-weight:600;">⚠️ Emzirme zamanı geldi!</span>'; }
+    else{ const h=Math.floor(leftMs/3600000),m=Math.floor((leftMs%3600000)/60000); document.getElementById('home-next-feed').textContent=(h>0?h+' sa ':'')+m+' dk sonra · '+nextTime; }
+    document.getElementById('home-last-feed').textContent='Son: '+timeSince(last.timestamp)+' · '+Math.floor(last.duration/60)+' dk';
+  }
+
+  // Today feeding stats
+  const todayF=fLogs.filter(l=>l.date===today);
+  const rightCount=todayF.filter(l=>l.side==='right').length;
+  const leftCount=todayF.filter(l=>l.side==='left').length;
+  const totalMin=todayF.reduce((a,l)=>a+Math.floor(l.duration/60),0);
+  document.getElementById('home-feed-right').textContent=rightCount;
+  document.getElementById('home-feed-left').textContent=leftCount;
+  document.getElementById('home-feed-total').textContent=todayF.length;
+  document.getElementById('home-feed-min').textContent=totalMin;
+  // Feed analysis - daily
+  const feedAnaEl=document.getElementById('home-feed-ana');
+  if(todayF.length>0){
+    const anas=analyzeFeedDaily(age, todayF.length, totalMin, rightCount, leftCount);
+    feedAnaEl.innerHTML=anas.map(a=>chip(a.s,a.m)).join('');
+  } else { feedAnaEl.innerHTML=''; }
+
+  // Diaper today
+  const todayD=dLogs.filter(l=>l.date===today);
+  const wet=todayD.filter(l=>l.type==='wet'||l.type==='both').length;
+  const dirty=todayD.filter(l=>l.type==='dirty'||l.type==='both').length;
+  document.getElementById('home-wet').textContent=wet;
+  document.getElementById('home-dirty').textContent=dirty;
+  document.getElementById('home-total-d').textContent=todayD.length;
+  // Diaper analysis
+  const dAnas=todayD.length?analyzeDiaper(age,wet,dirty):[];
+  document.getElementById('home-diaper-ana').innerHTML=dAnas.map(a=>chip(a.s,a.m)).join('');
+
+  // Next vaccine
+  const nv=VACCINES.filter(v=>!vDone.includes(v.id)).sort((a,b)=>a.targetDay-b.targetDay)[0]||null;
+  if(nv){
+    const left=nv.targetDay-age;
+    document.getElementById('home-vax-name').textContent=nv.name;
+    const vc=document.getElementById('home-vax-card');
+    if(left<=0){ document.getElementById('home-vax-left').textContent=Math.abs(left)+' gün gecikmiş'; document.getElementById('home-vax-left').style.color='var(--danger)'; vc.style.borderLeftColor='var(--danger)'; }
+    else if(left<=7){ document.getElementById('home-vax-left').textContent=left+' gün kaldı'; document.getElementById('home-vax-left').style.color='var(--warn)'; vc.style.borderLeftColor='var(--warn)'; }
+    else{ document.getElementById('home-vax-left').textContent=left+' gün kaldı'; document.getElementById('home-vax-left').style.color='var(--sage)'; }
+  }
+
+  // Build day buttons and render history
+  buildDayBtns();
+  selDay(selectedDayOffset, false);
+}
+
+function buildDayBtns(){
+  if(!baby) return;
+  const MN=['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'];
+  const row = document.getElementById('day-btns-row');
+  let html = '';
+  for(let i=0;i<=3;i++){
+    const d=new Date(); d.setDate(d.getDate()-i);
+    const label = i===0 ? 'Bugün' : d.getDate()+' '+MN[d.getMonth()];
+    html += '<button class="day-btn'+(i===0?' active':'')+'" id="daybtn-'+i+'" onclick="selDay('+i+')">'+label+'</button>';
+  }
+  row.innerHTML = html;
+  // Set date picker max to today
+  document.getElementById('history-date-picker').max = dateStr();
+}
+
+function selDay(offset, updateState=true){
+  if(updateState) selectedDayOffset = offset;
+  // Update quick buttons
+  for(let i=0;i<=3;i++){
+    const btn=document.getElementById('daybtn-'+i);
+    if(btn) btn.className='day-btn'+(i===offset?' active':'');
+  }
+  // Clear date picker selection if using quick buttons
+  const d=new Date(); d.setDate(d.getDate()-offset);
+  document.getElementById('history-date-picker').value = dateStr(d);
+  renderDayHistory(dateStr(d));
+}
+
+function selDayByDate(val){
+  if(!val) return;
+  // Deactivate all quick buttons
+  for(let i=0;i<=3;i++){
+    const d2=new Date(); d2.setDate(d2.getDate()-i);
+    const btn=document.getElementById('daybtn-'+i);
+    if(btn) btn.className='day-btn'+(dateStr(d2)===val?' active':'');
+  }
+  renderDayHistory(val);
+}
+
+function renderDayHistory(ds){
+  if(!baby) return;
+  const dayAge2=Math.max(0,Math.floor((new Date(ds)-new Date(baby.birthDate))/86400000));
+  const dayF=fLogs.filter(l=>l.date===ds);
+  const dayD=dLogs.filter(l=>l.date===ds);
+  const wet=dayD.filter(l=>l.type==='wet'||l.type==='both').length;
+  const dirty=dayD.filter(l=>l.type==='dirty'||l.type==='both').length;
+  const totalMin=dayF.reduce((a,l)=>a+Math.floor(l.duration/60),0);
+  const rightC=dayF.filter(l=>l.side==='right').length;
+  const leftC=dayF.filter(l=>l.side==='left').length;
+  const dAnas=dayD.length?analyzeDiaper(dayAge2,wet,dirty):[];
+  const MN=['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'];
+  const d=new Date(ds+'T12:00');
+  const today=dateStr();
+  const yesterday=dateStr(new Date(new Date().setDate(new Date().getDate()-1)));
+  const dateLabel = ds===today ? 'Bugün' : ds===yesterday ? d.getDate()+' '+MN[d.getMonth()]+' (Dün)' : d.getDate()+' '+MN[d.getMonth()];
+  const el=document.getElementById('day-history-content');
+  if(!dayF.length && !dayD.length){
+    el.innerHTML='<div style="color:var(--muted);font-size:13px;text-align:center;padding:12px 0;">'+dateLabel+' için kayıt bulunmuyor</div>';
+    return;
+  }
+  const isToday2 = ds===dateStr();
+  let html='<div style="font-size:11px;color:var(--muted);margin-bottom:10px;">'+dateLabel+' — '+dayAge2+'. gün</div>';
+  if(dayF.length){
+    html+='<div style="margin-bottom:12px;">';
+    html+='<div style="font-size:10px;font-weight:600;color:var(--wine);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">Emzirme</div>';
+    html+='<div style="display:flex;gap:16px;margin-bottom:8px;">';
+    html+='<div style="text-align:center;"><div style="font-size:20px;font-weight:700;font-family:Cormorant Garamond,serif;color:var(--text);">'+dayF.length+'</div><div style="font-size:10px;color:var(--muted);">Kez</div></div>';
+    html+='<div style="text-align:center;"><div style="font-size:20px;font-weight:700;font-family:Cormorant Garamond,serif;color:var(--gold);">'+totalMin+'</div><div style="font-size:10px;color:var(--muted);">Dakika</div></div>';
+    html+='<div style="text-align:center;"><div style="font-size:20px;font-weight:700;font-family:Cormorant Garamond,serif;color:var(--sage);">'+leftC+'</div><div style="font-size:10px;color:var(--muted);">Sol ←</div></div>';
+    html+='<div style="text-align:center;"><div style="font-size:20px;font-weight:700;font-family:Cormorant Garamond,serif;color:var(--wine);">'+rightC+'</div><div style="font-size:10px;color:var(--muted);">→ Sağ</div></div>';
+    html+='</div>';
+    if(!isToday2){
+      const dayAnas=analyzeFeedDaily(dayAge2, dayF.length, totalMin, rightC, leftC);
+      dayAnas.forEach(a=>{ html+=chip(a.s,a.m); });
+    }
+    html+='</div>';
+  }
+  if(dayD.length){
+    html+='<div style="margin-top:'+(dayF.length?'10':'0')+'px;">';
+    html+='<div style="font-size:10px;font-weight:600;color:var(--sage);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">Bez</div>';
+    html+='<div style="display:flex;gap:16px;margin-bottom:6px;">';
+    html+='<div style="text-align:center;"><div style="font-size:20px;font-weight:700;font-family:Cormorant Garamond,serif;color:var(--sage);">'+wet+'</div><div style="font-size:10px;color:var(--muted);">Islak</div></div>';
+    html+='<div style="text-align:center;"><div style="font-size:20px;font-weight:700;font-family:Cormorant Garamond,serif;color:var(--blush);">'+dirty+'</div><div style="font-size:10px;color:var(--muted);">Kaka</div></div>';
+    html+='<div style="text-align:center;"><div style="font-size:20px;font-weight:700;font-family:Cormorant Garamond,serif;color:var(--text);">'+dayD.length+'</div><div style="font-size:10px;color:var(--muted);">Toplam</div></div>';
+    html+='</div>';
+    if(!isToday2){ dAnas.forEach(a=>{ html+=chip(a.s,a.m); }); }
+    html+='</div>';
+  }
+  el.innerHTML=html;
+}
+
+// ===== FEEDING =====
+function startFeed(side){
+  timerSide=side; timerSec=0; timerRunning=true;
+  document.getElementById('feed-start-btns').classList.add('hidden');
+  document.getElementById('feed-timer-card').classList.remove('hidden');
+  document.getElementById('feed-timer-side').textContent=(side==='right'?'Sağ':'Sol')+' Meme';
+  document.getElementById('feed-ana').classList.add('hidden');
+  clearInterval(timerInterval);
+  timerInterval=setInterval(()=>{ if(timerRunning){ timerSec++; updateTimerDisplay(); } },1000);
+}
+function updateTimerDisplay(){
+  document.getElementById('timer-display').textContent=fmtDur(timerSec);
+  document.getElementById('feed-timer-sub').textContent=Math.floor(timerSec/60)+' dk '+timerSec%60+' sn';
+}
+function togglePause(){
+  timerRunning=!timerRunning;
+  document.getElementById('feed-pause-btn').textContent=timerRunning?'Duraklat':'Devam';
+}
+function saveFeed(){
+  clearInterval(timerInterval);
+  const log={id:Date.now(),side:timerSide,duration:timerSec,timestamp:new Date().toISOString(),date:dateStr()};
+  fLogs.unshift(log);
+  const age=dayAge(baby.birthDate);
+  const ana=analyzeFeed(age,Math.floor(timerSec/60));
+  document.getElementById('feed-ana').innerHTML=chip(ana.s,ana.m);
+  document.getElementById('feed-ana').classList.remove('hidden');
+  document.getElementById('feed-timer-card').classList.add('hidden');
+  document.getElementById('feed-start-btns').classList.remove('hidden');
+  timerSide=null; timerSec=0;
+  renderFeedToday(); renderHome(); updateFeedSug();
+}
+function cancelFeed(){
+  clearInterval(timerInterval);
+  document.getElementById('feed-timer-card').classList.add('hidden');
+  document.getElementById('feed-start-btns').classList.remove('hidden');
+  timerSide=null; timerSec=0;
+}
+function updateFeedSug(){
+  const last=fLogs[0]||null;
+  const sug=last?(last.side==='right'?'left':'right'):'right';
+  const txt=sug==='right'?'Sağ Meme →':'← Sol Meme';
+  document.getElementById('feed-sug').textContent=txt;
+  document.getElementById('feed-hdr-sub').textContent='Önerilen: '+txt;
+}
+function selFmSide(s){
+  fmSide=s;
+  document.getElementById('fm-left').className='toggle-btn'+(s==='left'?' sel':'');
+  document.getElementById('fm-right').className='toggle-btn'+(s==='right'?' sel':'');
+}
+function saveManualFeed(){
+  const min=parseInt(document.getElementById('fm-min').value||0);
+  if(!min){ alert('Süre giriniz.'); return; }
+  const timeVal=document.getElementById('fm-time').value;
+  const now=new Date();
+  if(timeVal){ const[hh,mm]=timeVal.split(':').map(Number); now.setHours(hh,mm,0,0); }
+  const log={id:Date.now(),side:fmSide,duration:min*60,timestamp:now.toISOString(),date:dateStr(now)};
+  fLogs.unshift(log); fLogs.sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp));
+  document.getElementById('fm-min').value=''; document.getElementById('fm-time').value='';
+  document.getElementById('feed-manual').classList.add('hidden');
+  renderFeedToday(); renderHome(); updateFeedSug();
+}
+function renderFeedToday(){
+  if(!baby) return;
+  const today=dateStr();
+  const age=dayAge(baby.birthDate);
+  const todayLogs=fLogs.filter(l=>l.date===today);
+  const el=document.getElementById('feed-today-list');
+  if(!todayLogs.length){ el.innerHTML='<div style="color:var(--muted);font-size:13px;text-align:center;padding:16px 0;">Henüz kayıt bulunmuyor</div>'; return; }
+  el.innerHTML=todayLogs.map(l=>{
+    const mins=Math.floor(l.duration/60);
+    const ana=analyzeFeed(age,mins);
+    const clr=ana.s==='good'?'var(--good)':ana.s==='warn'?'var(--warn)':'var(--danger)';
+    const bg=ana.s==='good'?'var(--goodBg)':ana.s==='warn'?'var(--warnBg)':'var(--dangerBg)';
+    return `<div style="padding:10px 0;border-bottom:1px solid var(--border);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="width:32px;height:32px;border-radius:8px;background:${l.side==='right'?'var(--wineL)':'var(--sageL)'};display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:${l.side==='right'?'var(--wine)':'var(--sage)'};font-family:Cormorant Garamond,serif;">${l.side==='right'?'→':'←'}</div>
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--text);">${l.side==='right'?'Sağ':'Sol'} Meme</div>
+            <div style="font-size:11px;color:var(--muted);">${trTime(l.timestamp)} · ${timeSince(l.timestamp)}</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:7px;">
+          <div style="font-size:16px;font-weight:700;color:${l.side==='right'?'var(--wine)':'var(--sage)'};font-family:Cormorant Garamond,serif;">${mins} dk</div>
+          <button onclick="deleteFeed(${l.id})" style="background:var(--dangerBg);border:1px solid rgba(155,32,32,.2);border-radius:7px;padding:5px 8px;cursor:pointer;color:var(--danger);font-size:11px;">Sil</button>
+        </div>
+      </div>
+      <div style="background:${bg};border-radius:8px;padding:6px 10px;font-size:11px;color:${clr};font-weight:500;">${ana.m}</div>
+    </div>`;
+  }).join('');
+}
+function deleteFeed(id){ fLogs=fLogs.filter(l=>l.id!==id); renderFeedToday(); renderHome(); updateFeedSug(); }
+
+// ===== DIAPER =====
+function quickDiaper(type){
+  dLogs.unshift({id:Date.now(),type,timestamp:new Date().toISOString(),date:dateStr()});
+  renderDiaperToday(); renderHome();
+}
+function selDmType(t){
+  dmType=t;
+  ['wet','dirty','both'].forEach(v=>{ document.getElementById('dm-'+v).className='toggle-btn'+(v===t?' sel':''); });
+}
+function saveManualDiaper(){
+  const timeVal=document.getElementById('dm-time').value;
+  const now=new Date();
+  if(timeVal){ const[hh,mm]=timeVal.split(':').map(Number); now.setHours(hh,mm,0,0); }
+  dLogs.unshift({id:Date.now(),type:dmType,timestamp:now.toISOString(),date:dateStr(now)});
+  dLogs.sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp));
+  document.getElementById('dm-time').value='';
+  document.getElementById('diaper-manual').classList.add('hidden');
+  renderDiaperToday(); renderHome();
+}
+function renderDiaperToday(){
+  if(!baby) return;
+  const today=dateStr();
+  const age=dayAge(baby.birthDate);
+  const todayL=dLogs.filter(l=>l.date===today);
+  const wet=todayL.filter(l=>l.type==='wet'||l.type==='both').length;
+  const dirty=todayL.filter(l=>l.type==='dirty'||l.type==='both').length;
+  document.getElementById('d-wet').textContent=wet;
+  document.getElementById('d-dirty').textContent=dirty;
+  document.getElementById('d-total').textContent=todayL.length;
+  // Analysis
+  const anas=todayL.length?analyzeDiaper(age,wet,dirty):[];
+  document.getElementById('d-ana').innerHTML=anas.map(a=>chip(a.s,a.m)).join('');
+  // List
+  const typeLabel=t=>t==='wet'?'Islak':t==='dirty'?'Kaka':'Islak + Kaka';
+  const el=document.getElementById('diaper-list');
+  const recent=dLogs.slice(0,16);
+  if(!recent.length){ el.innerHTML='<div style="color:var(--muted);font-size:13px;text-align:center;padding:14px 0;">Henüz kayıt bulunmuyor</div>'; return; }
+  el.innerHTML=recent.map(l=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);">
+      <div>
+        <div style="font-size:13px;font-weight:500;color:var(--text);">${typeLabel(l.type)}</div>
+        <div style="font-size:11px;color:var(--muted);">${new Date(l.timestamp).toLocaleString('tr-TR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}</div>
+      </div>
+      <button onclick="deleteDiaper(${l.id})" style="background:var(--dangerBg);border:1px solid rgba(155,32,32,.2);border-radius:7px;padding:5px 8px;cursor:pointer;color:var(--danger);font-size:11px;">Sil</button>
+    </div>`).join('');
+}
+function deleteDiaper(id){ dLogs=dLogs.filter(l=>l.id!==id); renderDiaperToday(); renderHome(); }
+
+// ===== VACCINE =====
+function renderVaccines(){
+  if(!baby) return;
+  const age=dayAge(baby.birthDate);
+  const el=document.getElementById('vaccine-list');
+  el.innerHTML=VACCINES.map(v=>{
+    const done=vDone.includes(v.id),left=v.targetDay-age;
+    const over=left<-7&&!done,due=!done&&left>=-7&&left<=14;
+    const borderC=done?'var(--good)':over?'var(--danger)':due?'var(--warn)':'var(--border)';
+    const statusTxt=done?'Tamamlandı':over?Math.abs(left)+' gün gecikmiş':left===0?'Bugün yapılmalı':left>0?left+' gün kaldı':'Geçti';
+    const statusC=done?'var(--good)':over?'var(--danger)':due?'var(--warn)':'var(--muted)';
+    return `<div style="background:var(--white);border-radius:16px;padding:14px 16px;margin-bottom:8px;border:1px solid var(--border);border-left:3px solid ${borderC};opacity:${done?.72:1};">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div style="flex:1;padding-right:10px;">
+          <div style="font-size:14px;font-weight:500;color:${done?'var(--muted)':'var(--text)'};">${v.name}</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:2px;">${v.desc} · ${v.targetDay}. gün</div>
+          <div style="font-size:11px;font-weight:600;margin-top:4px;color:${statusC};">${statusTxt}</div>
+        </div>
+        <button onclick="toggleVax('${v.id}',${done})" style="background:${done?'var(--goodBg)':'var(--sage)'};color:${done?'var(--good)':'#fff'};border:1.5px solid ${done?'var(--good)':'var(--sage)'};border-radius:9px;padding:7px 12px;font-size:11px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;min-width:76px;">${done?'Geri Al':'Yapıldı'}</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+function toggleVax(id,isDone){
+  if(isDone){ vDone=vDone.filter(v=>v!==id); } else { vDone.push(id); }
+  renderVaccines(); renderHome();
+}
+
+// ===== GROWTH =====
+function saveGrowth(){
+  const w=parseFloat(document.getElementById('g-w').value)||null;
+  const h=parseFloat(document.getElementById('g-h').value)||null;
+  if(!w&&!h){ alert('Kilo veya boy giriniz.'); return; }
+  const dateVal=document.getElementById('g-date').value;
+  const age=dayAge(baby.birthDate);
+  const ageDays=dateVal?Math.max(0,Math.floor((new Date(dateVal)-new Date(baby.birthDate))/86400000)):age;
+  const log={id:Date.now(),weight:w,height:h,date:dateVal||dateStr(),timestamp:dateVal?new Date(dateVal+'T12:00').toISOString():new Date().toISOString(),ageInDays:ageDays};
+  gLogs.unshift(log);
+  document.getElementById('g-w').value=''; document.getElementById('g-h').value=''; document.getElementById('g-date').value='';
+  const anas=analyzeGrowth(ageDays,w,h,baby.gender);
+  if(anas.length){
+    document.getElementById('growth-ana-content').innerHTML=anas.map(a=>chip(a.s,a.m)).join('');
+    document.getElementById('growth-ana').classList.remove('hidden');
+  }
+  renderGrowth(); renderHome();
+}
+function renderGrowth(){
+  if(!baby||!gLogs.length) return;
+  const latest=gLogs[0];
+  document.getElementById('growth-latest').classList.remove('hidden');
+  document.getElementById('growth-latest-lbl').textContent='Son Ölçüm — '+latest.ageInDays+'. gün';
+  document.getElementById('gl-w').innerHTML=latest.weight?`<div style="font-size:28px;font-weight:700;font-family:Cormorant Garamond,serif;color:#3a5080;">${latest.weight}<span style="font-size:13px;font-weight:400;"> kg</span></div><div style="font-size:10px;color:var(--muted);">Kilo</div>`:'';
+  document.getElementById('gl-h').innerHTML=latest.height?`<div style="font-size:28px;font-weight:700;font-family:Cormorant Garamond,serif;color:#3a5080;">${latest.height}<span style="font-size:13px;font-weight:400;"> cm</span></div><div style="font-size:10px;color:var(--muted);">Boy</div>`:'';
+  document.getElementById('growth-history-card').classList.remove('hidden');
+  document.getElementById('growth-history').innerHTML=gLogs.map(l=>`
+    <div style="padding:10px 0;border-bottom:1px solid var(--border);">
+      <div style="font-size:10px;color:var(--muted);margin-bottom:4px;">${l.ageInDays}. gün · ${new Date(l.timestamp).toLocaleDateString('tr-TR',{day:'numeric',month:'long'})}</div>
+      <div style="display:flex;gap:20px;">
+        ${l.weight?`<div style="font-size:16px;font-weight:600;font-family:Cormorant Garamond,serif;color:var(--text);">${l.weight} kg</div>`:''}
+        ${l.height?`<div style="font-size:16px;font-weight:600;font-family:Cormorant Garamond,serif;color:var(--text);">${l.height} cm</div>`:''}
+      </div>
+    </div>`).join('');
+}
+
+// ===== SETTINGS =====
+function openSettings(){
+  tmpSettings={...settings};
+  renderSettingsBtns();
+  document.getElementById('settings-modal').classList.remove('hidden');
+}
+function closeSettings(){ document.getElementById('settings-modal').classList.add('hidden'); }
+function renderSettingsBtns(){
+  const mkBtns=(elId,opts,key)=>{
+    document.getElementById(elId).innerHTML=opts.map(o=>`<button onclick="selSetting('${key}',${o})" style="padding:8px 14px;border-radius:8px;border:1.5px solid ${tmpSettings[key]===o?'var(--wine)':'var(--border)'};background:${tmpSettings[key]===o?'var(--wineL)':'var(--white)'};color:${tmpSettings[key]===o?'var(--wine)':'var(--sub)'};font-weight:${tmpSettings[key]===o?700:400};cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;">${o}</button>`).join('');
+  };
+  mkBtns('set-dh',[1,1.5,2,2.5,3,3.5,4],'dayHours');
+  mkBtns('set-nh',[2,2.5,3,3.5,4,4.5,5],'nightHours');
+  mkBtns('set-ds',[5,6,7,8],'dayStart');
+  mkBtns('set-ns',[20,21,22,23],'nightStart');
+}
+function selSetting(key,val){ tmpSettings[key]=val; renderSettingsBtns(); }
+function saveSettings(){ settings={...tmpSettings}; closeSettings(); }
+
+// ===== MANUAL TOGGLE =====
+function toggleManual(type){
+  const id=type==='feed'?'feed-manual':'diaper-manual';
+  document.getElementById(id).classList.toggle('hidden');
+}
+
+// ===== LOCAL STORAGE (OTOMATIK KAYIT) =====
+function saveData() {
+  localStorage.setItem('aslanApp_state', JSON.stringify({
+    baby, fLogs, dLogs, gLogs, vDone, settings
+  }));
+}
+function loadData() {
+  const data = localStorage.getItem('aslanApp_state');
+  if (data) {
+    const parsed = JSON.parse(data);
+    baby = parsed.baby || null;
+    fLogs = parsed.fLogs || [];
+    dLogs = parsed.dLogs || [];
+    gLogs = parsed.gLogs || [];
+    vDone = parsed.vDone || [];
+    if(parsed.settings) settings = parsed.settings;
+    
+    if (baby) {
+      document.getElementById('setup-page').classList.add('hidden');
+      document.getElementById('main-app').classList.remove('hidden');
+      renderAll();
+    }
+  }
+}
+
+// Uygulama açılışında verileri yükle
+window.addEventListener('DOMContentLoaded', () => {
+  loadData();
+});
+</script>
+</body>
+</html>
